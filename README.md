@@ -54,8 +54,7 @@ Follow these steps to run the Streamlit code locally:
 ### Clone the Repository
 
 ```
-git clone https://github.com/your-username/medpredict.git
-cd medpredict
+https://github.com/Gaje1109/UPTOR_106_FINAL_PROJECT_GAJENDRAN.git
 ```
 ### Install Dependencies
 
