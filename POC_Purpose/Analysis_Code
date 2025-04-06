@@ -1,0 +1,89 @@
+
+'''
+import warnings
+
+from sklearn.metrics.pairwise import cosine_similarity
+
+warnings.filterwarnings("ignore")
+
+import numpy as np
+import pandas as pd
+import os
+import matplotlib.pyplot as plt
+import pickle
+
+from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.cluster import KMeans
+from sklearn.decomposition import PCA
+
+# Load dataset
+file_path = "D:/Gajendran/Python Works/LMES/MediPredict_AI_Health_Analyzer/CSVFiles/Symptom2Disease.csv"
+
+if not os.path.exists(file_path):
+    raise FileNotFoundError(f"Dataset not found at {file_path}")
+
+symptoms_df = pd.read_csv(file_path)
+print("Dataset loaded successfully:\n", symptoms_df.head())
+
+# Vectorize symptom descriptions
+vectorizer = TfidfVectorizer(stop_words="english")
+X = vectorizer.fit_transform(symptoms_df["symptoms"]).toarray()
+
+# Train KMeans model
+num_clusters = 3
+kmeans = KMeans(n_clusters=num_clusters, random_state=42, n_init=10)
+symptoms_df["Cluster"] = kmeans.fit_predict(X)
+
+# Visualize with PCA
+pca = PCA(n_components=2)
+X_pca = pca.fit_transform(X)
+
+plt.figure(figsize=(8, 6))
+plt.scatter(X_pca[:, 0], X_pca[:, 1], c=symptoms_df["Cluster"], cmap="viridis", alpha=0.7)
+plt.colorbar(label="Cluster")
+plt.xlabel("Principal Component 1")
+plt.ylabel("Principal Component 2")
+plt.title("Clusters of Symptom Descriptions (PCA Reduced)")
+plt.show()
+
+# Save model and vectorizer for deployment
+pickle.dump(kmeans, open("../Model/kmeans_model.sav", "wb"))
+pickle.dump(vectorizer, open("../Model/tfidf_vectorizer.pkl", "wb"))
+
+print("\nModel and Vectorizer saved successfully!")
+
+
+# ============================
+# Predict based on user input
+# ============================
+def predict_best_disease(user_input):
+    # Load models
+    loaded_model = pickle.load(open("../Model/kmeans_model.sav", "rb"))
+    loaded_vectorizer = pickle.load(open("../Model/tfidf_vectorizer.pkl", "rb"))
+
+    # Transform user input
+    user_vec = loaded_vectorizer.transform([user_input]).toarray()
+
+    # Predict cluster
+    predicted_cluster = loaded_model.predict(user_vec)[0]
+
+    # Filter dataset by cluster
+    cluster_data = symptoms_df[symptoms_df["Cluster"] == predicted_cluster].copy()
+    cluster_vectors = loaded_vectorizer.transform(cluster_data["symptoms"]).toarray()
+
+    # Compute similarity
+    similarities = cosine_similarity(user_vec, cluster_vectors)[0]
+    best_index = np.argmax(similarities)
+
+    # Get predicted disease
+    predicted_disease = cluster_data.iloc[best_index]["disease"]
+
+    print(f"\nPredicted Disease: {predicted_disease}")
+    return predicted_disease
+
+
+# 🧪 Example usage
+user_symptom_input = input("\nEnter your symptoms: ")
+predict_best_disease(user_symptom_input)
+
+'''
