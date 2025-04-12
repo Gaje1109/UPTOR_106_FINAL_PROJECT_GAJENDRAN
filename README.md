@@ -69,4 +69,4 @@ streamlit run main.py
 This will launch the Streamlit app locally. Open your web browser and navigate to the provided local address to explore MedPredict.
 
 
-Developer Name: R.Gajendran
+Developer Name: Gajendran Ravichandran
